@@ -1,0 +1,24 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t hollymaria/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run hollymaria/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t hollymaria/multi-client ./client
+  - docker build -t hollymaria/multi-nginx ./nginx
+  - docker build -t hollymaria/multi-server ./server
+  - docker build -t hollymaria/multi-worker ./worker
+
+# log into docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+# take them images and push them to docker hub
+  - docker push hollymaria/multi-client
+  - docker push hollymaria/multi-nginx
+  - docker push hollymaria/multi-server
+  - docker push hollymaria/multi-worker
